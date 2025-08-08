@@ -1,7 +1,6 @@
 package com.example.weesh.data.factory;
 
 import com.example.weesh.core.foundation.exception.ValidationException;
-import com.example.weesh.core.shared.ApiResponse;
 import com.example.weesh.core.user.application.factory.UserFactory;
 import com.example.weesh.core.user.domain.User;
 import com.example.weesh.core.foundation.enums.UserRole;

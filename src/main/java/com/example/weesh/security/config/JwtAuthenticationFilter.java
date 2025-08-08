@@ -1,7 +1,10 @@
 package com.example.weesh.security.config;
 
-import com.example.weesh.core.auth.application.jwt.TokenService;
+import com.example.weesh.core.auth.application.jwt.TokenResolver;
+import com.example.weesh.core.auth.application.jwt.TokenStorage;
+import com.example.weesh.core.auth.application.jwt.TokenValidator;
 import com.example.weesh.core.shared.ApiResponse;
+import com.example.weesh.core.shared.PasswordValidator;
 import com.example.weesh.data.redis.RedisService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -21,7 +24,8 @@ import java.io.IOException;
 @Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private final TokenService tokenService;
+    private final TokenValidator tokenValidator;
+    private final TokenResolver tokenResolver;
     private final RedisService redisService;
     private final UserDetailsService userDetailsService;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -36,8 +40,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = tokenService.resolveToken(request);
-        String refreshToken = tokenService.resolveRefreshToken(request);
+        String token = tokenResolver.resolveToken(request);
+        String refreshToken = tokenResolver.resolveRefreshToken(request);
 
         if (refreshToken != null && !requestURI.equals("/auth/reissue")) {
             log.warn("리프레시 토큰 오용 감지: {}, URI: {}", refreshToken.substring(0, Math.min(10, refreshToken.length())), requestURI);
@@ -56,9 +60,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
                 // 토큰 유효성 검증
-                tokenService.validateToken(token);
+                tokenValidator.validateToken(token);
 
-                String username = tokenService.getUsername(token);
+                String username = tokenValidator.getUsername(token);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 if (userDetails != null) {
                     var authentication = org.springframework.security.authentication.UsernamePasswordAuthenticationToken

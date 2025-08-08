@@ -1,6 +1,7 @@
 package com.example.weesh.security.config;
 
-import com.example.weesh.core.auth.application.jwt.TokenService;
+import com.example.weesh.core.auth.application.jwt.TokenResolver;
+import com.example.weesh.core.auth.application.jwt.TokenValidator;
 import com.example.weesh.data.redis.RedisService;
 import com.example.weesh.security.auth.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +27,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
-
-    private final TokenService tokenService;
+    private final TokenResolver tokenResolver;
+    private final TokenValidator tokenValidator;
     private final RedisService redisService;
     private final CustomUserDetailsService userDetailsService; // 커스텀 서비스 주입
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
@@ -51,7 +52,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/users/register/**", "/auth/login", "/auth/reissue", "/error").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(new JwtAuthenticationFilter(tokenService, redisService, userDetailsService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(tokenValidator, tokenResolver, redisService, userDetailsService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

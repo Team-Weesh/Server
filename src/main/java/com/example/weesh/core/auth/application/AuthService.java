@@ -1,21 +1,22 @@
 package com.example.weesh.core.auth.application;
 
-import com.example.weesh.core.auth.application.jwt.TokenService;
+import com.example.weesh.core.auth.application.jwt.TokenGenerator;
+import com.example.weesh.core.auth.application.jwt.TokenResolver;
+import com.example.weesh.core.auth.application.jwt.TokenStorage;
+import com.example.weesh.core.auth.application.jwt.TokenValidator;
 import com.example.weesh.core.auth.application.useCase.AuthUseCase;
 import com.example.weesh.core.auth.exception.AuthErrorCode;
 import com.example.weesh.core.auth.exception.AuthException;
 import com.example.weesh.core.shared.PasswordValidator;
 import com.example.weesh.core.user.domain.User;
 import com.example.weesh.data.jwt.JwtTokenResponse;
-import com.example.weesh.data.jwt.TokenServiceImpl;
 import com.example.weesh.web.auth.dto.AuthRequestDto;
-import com.example.weesh.web.user.dto.UserResponseDto;
+import com.example.weesh.web.auth.dto.LogoutResponseDto;
+import com.example.weesh.web.auth.dto.ProfileResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,7 +25,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthService implements AuthUseCase {
     private final AuthRepository authRepository;
-    private final TokenService tokenService;
+    private final TokenGenerator tokenGenerator;
+    private final TokenValidator tokenValidator;
+    private final TokenStorage tokenStorage;
     private final PasswordValidator passwordValidator;
 
     @Override
@@ -32,41 +35,40 @@ public class AuthService implements AuthUseCase {
         User user = authRepository.findByUsername(dto.getUsername())
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND, "사용자를 찾을 수 없습니다."));
         passwordValidator.validate(dto.getPassword(), user.getPassword());
-        return tokenService.generateToken(dto.getUsername(), user.getId());
+        return tokenGenerator.generateToken(user.getUsername(), user.getId());
     }
 
     @Override
-    public Map<String, Object> getProfileWithPortfolios() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    public ProfileResponseDto getProfileWithPortfolios(String username) {
         User user = authRepository.findByUsername(username)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND, "사용자를 찾을 수 없습니다."));
         Map<String, Object> response = new HashMap<>();
-        response.put("user", new UserResponseDto(user));
-        return response;
+        response.put("user", new com.example.weesh.web.user.dto.UserResponseDto(user));
+        return new ProfileResponseDto(response);
     }
 
     @Override
     public String reissueAccessToken(String refreshToken) {
-        tokenService.validateToken(refreshToken);
-        String username = tokenService.getUsername(refreshToken);
-        String storedRefreshToken = tokenService.getStoredRefreshToken(username);
+        tokenValidator.validateToken(refreshToken);
+        String username = tokenValidator.getUsername(refreshToken);
+        String storedRefreshToken = tokenStorage.getStoredRefreshToken(username);
         if (!refreshToken.equals(storedRefreshToken)) {
             throw new AuthException(AuthErrorCode.INVALID_TOKEN, "리프레시 토큰이 유효하지 않습니다.");
         }
         User user = authRepository.findByUsername(username)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND, "사용자를 찾을 수 없습니다."));
-        JwtTokenResponse newTokens = tokenService.generateToken(username, user.getId());
-        tokenService.invalidateRefreshToken(username); // 이전 리프레시 토큰 무효화
-        tokenService.storeNewRefreshToken(username, newTokens.refreshToken(), TokenServiceImpl.REFRESH_TOKEN_VALID_TIME);
+        JwtTokenResponse newTokens = tokenGenerator.generateToken(username, user.getId());
+        tokenStorage.invalidateRefreshToken(username);
+        tokenStorage.storeNewRefreshToken(username, newTokens.refreshToken(), 14 * 24 * 60 * 60 * 1000L); // 14일
         return newTokens.accessToken();
     }
 
     @Override
-    public Map<String, String> logout(String accessToken) {
-        tokenService.validateToken(accessToken);
-        String username = tokenService.getUsername(accessToken);
-        tokenService.invalidateRefreshToken(username); // 리프레시 토큰 무효화
-        tokenService.blacklistAccessToken(accessToken); // 액세스 토큰 블랙리스트
-        return Map.of("message", "로그아웃 성공");
+    public LogoutResponseDto logout(String accessToken) {
+        tokenValidator.validateToken(accessToken);
+        String username = tokenValidator.getUsername(accessToken);
+        tokenStorage.invalidateRefreshToken(username);
+        tokenStorage.blacklistAccessToken(accessToken);
+        return new LogoutResponseDto("로그아웃 성공");
     }
 }

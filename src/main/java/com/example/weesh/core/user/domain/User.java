@@ -2,69 +2,70 @@
 package com.example.weesh.core.user.domain;
 
 import com.example.weesh.core.foundation.enums.UserRole;
-import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
-@Entity(name = "users")
-public class User implements Serializable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class User {
+    private final Long id;
+    private final String username;
+    private final String password;
+    private final String fullName;
+    private final int studentNumber;
+    private final LocalDateTime createdDate;
+    private final LocalDateTime lastModifiedDate;
+    private final Set<UserRole> roles;
 
-    @Column(nullable = false, unique = true)
-    private String username;
-
-    @Column(nullable = false)
-    private String password;
-
-    @Column(name = "full_name", nullable = false)
-    private String fullName;
-
-    @Column(name = "student_number", nullable = false, unique = true)
-    private int studentNumber;
-
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdDate;
-
-    @Column(nullable = false)
-    private LocalDateTime lastModifiedDate;
-
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
-    @Column(name = "role")
-    @Enumerated(EnumType.STRING)
-    private Set<UserRole> roles = new HashSet<>();
-
-    // 기본 생성자 (JPA 요구)
-    protected User() {
-    }
-
-    // 생성자
     @Builder
-    public User(String username, String password, String fullName, int studentNumber,
+    public User(Long id, String username, String password, String fullName, int studentNumber,
                 LocalDateTime createdDate, LocalDateTime lastModifiedDate, Set<UserRole> roles) {
-        this.username = username;
+        // 기본 검증
+        Objects.requireNonNull(username, "Username cannot be null");
+        Objects.requireNonNull(password, "Password cannot be null");
+        Objects.requireNonNull(fullName, "Full name cannot be null");
+
+        this.id = id;
+        this.username = username.trim();
         this.password = password;
-        this.fullName = fullName;
+        this.fullName = fullName.trim();
         this.studentNumber = studentNumber;
-        this.createdDate = createdDate != null ? createdDate : LocalDateTime.now();
-        this.lastModifiedDate = lastModifiedDate != null ? lastModifiedDate : LocalDateTime.now();
-        this.roles = roles != null ? new HashSet<>(roles) : new HashSet<>();
+
+        LocalDateTime now = LocalDateTime.now();
+        this.createdDate = createdDate != null ? createdDate : now;
+        this.lastModifiedDate = lastModifiedDate != null ? lastModifiedDate : now;
+
+        // 불변 컬렉션으로 보호
+        this.roles = roles != null ?
+                Collections.unmodifiableSet(new HashSet<>(roles)) :
+                Collections.emptySet();
     }
 
-    // 비즈니스 메서드
-//    public void updateLastModifiedDate() {
-//        this.lastModifiedDate = LocalDateTime.now();
-//    }
-//
-//    public void addRole(UserRole role) {
-//        if (role != null) this.roles.add(role);
-//    }
+    // 도메인 로직
+    public boolean hasRole(UserRole role) {
+        return roles.contains(role);
+    }
+
+    public boolean isAdmin() {
+        return hasRole(UserRole.ADMIN);
+    }
+
+    // 업데이트를 위한 빌더 생성
+    public User withUpdatedInfo(String fullName, String password) {
+        return User.builder()
+                .id(this.id)
+                .username(this.username)
+                .password(password != null ? password : this.password)
+                .fullName(fullName != null ? fullName : this.fullName)
+                .studentNumber(this.studentNumber)
+                .createdDate(this.createdDate)
+                .lastModifiedDate(LocalDateTime.now())
+                .roles(new HashSet<>(this.roles))
+                .build();
+    }
 }

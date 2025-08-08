@@ -1,15 +1,16 @@
 package com.example.weesh.data.jwt;
 
-import com.example.weesh.core.auth.application.jwt.TokenService;
+import com.example.weesh.core.auth.application.jwt.TokenGenerator;
+import com.example.weesh.core.auth.application.jwt.TokenResolver;
+import com.example.weesh.core.auth.application.jwt.TokenStorage;
+import com.example.weesh.core.auth.application.jwt.TokenValidator;
 import com.example.weesh.core.auth.exception.AuthErrorCode;
 import com.example.weesh.core.auth.exception.AuthException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import com.example.weesh.data.redis.RedisService;
 import org.springframework.stereotype.Component;
@@ -22,7 +23,7 @@ import java.util.Date;
 
 @Slf4j
 @Component
-public class TokenServiceImpl implements TokenService {
+public class TokenServiceImpl implements TokenGenerator, TokenValidator, TokenStorage, TokenResolver {
     private final SecretKey key;
     public static final String BEARER = "Bearer";
     public static final long ACCESS_TOKEN_VALID_TIME = 30 * 60 * 1000L; // 30분
@@ -109,7 +110,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public boolean validateToken(String token) {
+    public void validateToken(String token) {
         if (token == null || token.isEmpty()) {
             log.error("Token is missing or empty");
             throw new AuthException(AuthErrorCode.INVALID_TOKEN, "토큰이 비어있거나 누락되었습니다.");
@@ -121,22 +122,27 @@ public class TokenServiceImpl implements TokenService {
                 log.warn("만료된 JWT 토큰: expiration = {}", claims.getExpiration());
                 throw new AuthException(AuthErrorCode.EXPIRED_TOKEN, "토큰이 만료되었습니다.");
             }
-            return true;
-        } catch (SecurityException e) {
-            log.error("잘못된 JWT 서명: {}", e.getMessage());
-            throw new AuthException(AuthErrorCode.INVALID_TOKEN, "잘못된 JWT 서명입니다.");
+        } catch (SignatureException e) {
+            log.warn("Invalid JWT signature: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN, "잘못된 토큰입니다.");
+        } catch (ExpiredJwtException e) {
+            log.warn("Expired JWT token: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.EXPIRED_TOKEN, "토큰이 만료되었습니다. 다시 로그인해주세요.");
         } catch (MalformedJwtException e) {
-            log.error("잘못된 JWT 토큰 구조: {}", e.getMessage());
-            throw new AuthException(AuthErrorCode.INVALID_TOKEN, "잘못된 JWT 토큰 구조입니다.");
+            log.warn("Malformed JWT token: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN, "잘못된 형식의 토큰입니다.");
         } catch (UnsupportedJwtException e) {
-            log.error("지원되지 않는 JWT 토큰: {}", e.getMessage());
-            throw new AuthException(AuthErrorCode.INVALID_TOKEN, "지원되지 않는 JWT 토큰입니다.");
+            log.warn("Unsupported JWT token: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN, "지원하지 않는 토큰 형식입니다.");
         } catch (IllegalArgumentException e) {
-            log.error("유효하지 않은 JWT 토큰: {}", e.getMessage());
-            throw new AuthException(AuthErrorCode.INVALID_TOKEN, "유효하지 않은 JWT 토큰입니다.");
+            log.warn("Invalid JWT token: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN, "유효하지 않은 토큰입니다.");
+        } catch (JwtException e) {
+            log.warn("JWT processing error: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN, "토큰 처리 중 오류가 발생했습니다.");
         } catch (Exception e) {
-            log.error("예상치 못한 오류 발생: {}", e.getMessage());
-            throw new AuthException(AuthErrorCode.INVALID_TOKEN, "토큰 검증 중 오류가 발생했습니다. 토큰을 다시 확인해주세요.");
+            log.error("Unexpected error during token validation: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN, "토큰 검증 중 예상치 못한 오류가 발생했습니다.");
         }
     }
 
