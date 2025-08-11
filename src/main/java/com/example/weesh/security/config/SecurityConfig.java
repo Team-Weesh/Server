@@ -72,6 +72,7 @@ public class SecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
+        LoggingUtil.debug("Configuring WebSecurityCustomizer");
         return (web) -> web.ignoring().requestMatchers(pathValidator.getPublicPaths().toArray(new String[0]));
     }
 
