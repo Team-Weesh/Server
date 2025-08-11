@@ -21,16 +21,31 @@ def setup_logging():
 logger = setup_logging()
 
 def timing_decorator(func):
-    """함수 실행 시간을 측정하는 데코레이터"""
+    """함수 실행 시간을 측정하는 데코레이터 (동기/비동기 지원)"""
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    async def async_wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = await func(*args, **kwargs)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        logger.info(f"{func.__name__} 실행 시간: {execution_time:.2f}초")
+        return result
+    
+    @wraps(func)
+    def sync_wrapper(*args, **kwargs):
         start_time = time.time()
         result = func(*args, **kwargs)
         end_time = time.time()
         execution_time = end_time - start_time
         logger.info(f"{func.__name__} 실행 시간: {execution_time:.2f}초")
-        return result, execution_time
-    return wrapper
+        return result
+    
+    # 함수가 코루틴인지 확인하여 적절한 래퍼 반환
+    import inspect
+    if inspect.iscoroutinefunction(func):
+        return async_wrapper
+    else:
+        return sync_wrapper
 
 def validate_conversation(conversation: List[Dict[str, Any]]) -> bool:
     """대화 데이터 유효성 검사"""
@@ -56,25 +71,7 @@ def format_conversation_text(conversation: List[Dict[str, Any]]) -> str:
         formatted_text += f"{speaker}: {content}\n"
     return formatted_text.strip()
 
-def extract_keywords_from_response(response: str) -> List[str]:
-    """Gemini 응답에서 키워드 추출"""
-    try:
-        # 응답에서 키워드 부분만 추출
-        lines = response.strip().split('\n')
-        keywords = []
-        
-        for line in lines:
-            line = line.strip()
-            if line and not line.startswith('#'):
-                # 번호나 불필요한 문자 제거
-                keyword = line.replace('1.', '').replace('2.', '').replace('3.', '').strip()
-                if keyword:
-                    keywords.append(keyword)
-        
-        return keywords[:3]  # 최대 3개만 반환
-    except Exception as e:
-        logger.error(f"키워드 추출 중 오류: {e}")
-        return []
+
 
 
 
