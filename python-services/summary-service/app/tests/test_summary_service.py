@@ -3,7 +3,9 @@ import os
 import sys
 
 # 프로젝트 루트를 Python 경로에 추가
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(current_dir))  # summary-service 디렉토리
+sys.path.insert(0, project_root)
 
 from app.services.summary_service import SummaryService
 
@@ -40,7 +42,7 @@ async def test_summary():
         print(f"메시지 수: {result.total_messages}")
         print(f"처리 시간: {result.processing_time:.2f}초")
         
-        print("\n 테스트 성공!")
+        print("테스트 성공!")
         
     except Exception as e:
         print(f"테스트 실패: {e}")

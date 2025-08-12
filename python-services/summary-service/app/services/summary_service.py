@@ -90,7 +90,7 @@ class SummaryService:
             end_time = time.time()
             processing_time = end_time - start_time
             
-            logger.info(f"요약 완료: {len(keywords)}개 키워드 추출 (처리시간: {processing_time:.2f}초)")
+            logger.info(f"대화 요약 및 키워드 추출 완료: {len(keywords)}개 키워드 (처리시간: {processing_time:.2f}초)")
             
             return SummaryResponse(
                 keywords=keywords,
