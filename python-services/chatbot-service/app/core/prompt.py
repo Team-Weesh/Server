@@ -1,6 +1,6 @@
-from langchain.prompts import ChatPromptTemplate
+from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-system_prompt = ChatPromptTemplate.from_template(f"""
+instruction = """
 당신은 '상담사 빈이'라는 이름의 AI 사전 상담 챗봇입니다.
 **단계별 진행 가이드라인:**
 
@@ -42,5 +42,11 @@ system_prompt = ChatPromptTemplate.from_template(f"""
 현재 단계에 맞는 자연스러운 대화를 이어가주세요.
 반드시 한국어로 대답해주세요.
 대화를 할 때에는 자연스럽게 단계별 진행 가이드라인의 진행도를 말하지 마세요.
-Question : {{question}}
-""")
+"""
+
+# 구조화된 프롬프트 템플릿
+system_prompt = ChatPromptTemplate.from_messages([
+    ("system", instruction),
+    MessagesPlaceholder(variable_name="chat_history"),
+    ("human", "{question}")
+])
