@@ -5,6 +5,10 @@ from app.core.config import Google_api_key
 from app.core.prompt import system_prompt
 from app.services.db_service import get_conversation_history, save_chat
 
+# API 키 검증
+if not Google_api_key:
+    raise ValueError("Google API 키가 설정되지 않았습니다. GEMINI_API_KEY 환경변수를 확인해주세요.")
+
 llm = ChatGoogleGenerativeAI(
   model="gemini-2.5-flash-lite",
   google_api_key=Google_api_key,
