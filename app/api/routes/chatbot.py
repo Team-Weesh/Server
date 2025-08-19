@@ -5,8 +5,38 @@ from app.models.session_summary import SessionEndRequest, SessionSummaryResponse
 from app.services.chatbot_service import answer_chat
 from app.services.db_service import collection
 from app.services.summary_service import summary_service
+from app.utils.helpers import logger
+from datetime import datetime, timezone
 
 router = APIRouter()
+
+@router.get("/health")
+async def health_check():
+    """서비스 상태 확인"""
+    try:
+        # AI 모델 초기화 상태 확인
+        current_time = datetime.now(timezone.utc).isoformat()
+        
+        if not summary_service.chain:
+            return {
+                "status": "unhealthy",
+                "message": "AI 모델이 초기화되지 않았습니다.",
+                "timestamp": current_time
+            }
+        
+        return {
+            "status": "healthy",
+            "message": "서비스가 정상적으로 동작하고 있습니다.",
+            "timestamp": current_time
+        }
+        
+    except Exception as e:
+        logger.error(f"헬스 체크 실패: {e}")
+        return {
+            "status": "unhealthy",
+            "message": f"서비스 오류: {str(e)}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
 
 @router.post("/ask")
 async def ask_chat(query: Queryinput):
@@ -31,49 +61,48 @@ async def end_session(request: SessionEndRequest):
     """대화 세션 종료 및 요약 생성"""
     
     try:
-        # 1. 사용자의 대화 기록 조회
-        messages = list(collection.find({"user_id": request.user_id}).sort("time", 1))
+        if request.conversation:
+            # 직접 대화 데이터 제공된 경우
+            conversation_data = request.conversation
+            source = "direct"
+        else:
+            # user_id로 DB 조회
+            messages = list(collection.find({"user_id": request.user_id}).sort("time", 1))
+            
+            if not messages:
+                return SessionSummaryResponse(
+                    user_id=request.user_id,
+                    summary="대화 기록이 없습니다.",
+                    keywords=["대화 없음"],
+                    total_messages=0,
+                    processing_time=0.0,
+                    success=False,
+                    source="database"
+                )
+            
+            # DB 메시지를 요약 형식으로 변환
+            conversation_data = []
+            for message in messages:
+                conversation_data.extend([
+                    {"speaker": "user", "message": message["question"]},
+                    {"speaker": "assistant", "message": message["answer"]}
+                ])
+            source = "database"
         
-        if not messages:
-            return SessionSummaryResponse(
-                user_id=request.user_id,
-                summary="대화 기록이 없습니다.",
-                keywords=["대화 없음"],
-                total_messages=0,
-                processing_time=0.0,
-                success=False
-            )
-        
-        # 2. 대화 데이터를 요약 서비스 형식으로 변환
-        conversation_data = []
-        for message in messages:
-            # 사용자 메시지
-            conversation_data.append({
-                "speaker": "user",
-                "message": message["question"],
-                "timestamp": message["time"].isoformat() if message.get("time") else None
-            })
-            # 어시스턴트 메시지
-            conversation_data.append({
-                "speaker": "assistant", 
-                "message": message["answer"],
-                "timestamp": message["time"].isoformat() if message.get("time") else None
-            })
-        
-        # 3. 내부 요약 서비스 호출
+        # 공통 요약 로직
         summary_result = await summary_service.summarize_conversation(
             conversation_data, 
-            max_keywords=request.max_keywords
+            request.max_keywords
         )
         
-        # 4. 응답 생성
         return SessionSummaryResponse(
             user_id=request.user_id,
             summary=summary_result.summary,
             keywords=summary_result.keywords,
             total_messages=summary_result.total_messages,
             processing_time=summary_result.processing_time,
-            success=True
+            success=True,
+            source=source
         )
         
     except Exception as e:
@@ -83,5 +112,6 @@ async def end_session(request: SessionEndRequest):
             keywords=["오류"],
             total_messages=0,
             processing_time=0.0,
-            success=False
+            success=False,
+            source="error"
         )

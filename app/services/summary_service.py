@@ -8,7 +8,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 from app.core.config import settings
 from app.core.prompt import get_prompt_template
-from app.models.summary import SummaryResponse
+from app.models.session_summary import SummaryResponse
 from app.utils.helpers import (
     logger, 
     timing_decorator, 

@@ -5,7 +5,6 @@ from contextlib import asynccontextmanager
 import time
 
 from app.core.config import settings
-from app.api.routes.summary import router as summary_router
 from app.api.routes.chatbot import router as chatbot_router
 from app.utils.helpers import logger
 
@@ -25,9 +24,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="AI 상담 챗봇 및 대화 요약 서비스",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    description="상담 챗봇 API 서버",
     lifespan=lifespan
 )
 
@@ -36,11 +33,11 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # 개발 환경용, 프로덕션에서는 특정 도메인으로 제한
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 요청 처리 시간 측정 미들웨어
+# 처리 시간 헤더 추가 미들웨어
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     start_time = time.time()
@@ -50,7 +47,6 @@ async def add_process_time_header(request: Request, call_next):
     return response
 
 # 라우터 등록
-app.include_router(summary_router, prefix=settings.API_V1_STR)
 app.include_router(chatbot_router, prefix=settings.API_V1_STR)
 
 # 루트 엔드포인트
@@ -59,7 +55,7 @@ async def root():
     """루트 엔드포인트"""
     return {
         "message": f"{settings.PROJECT_NAME} v{settings.VERSION}",
-        "health": f"{settings.API_V1_STR}/summary/health",
+        "health": f"{settings.API_V1_STR}/health",
         "docs": "/docs",
         "AAAA": "/docs 로 가세요"
     }
@@ -68,15 +64,10 @@ async def root():
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """전역 예외 처리"""
-    if not hasattr(exc, 'status_code'):
-        logger.error(f"전역 예외 발생: {exc}")
-    
+    logger.error(f"전역 예외 발생: {exc}")
     return JSONResponse(
         status_code=500,
-        content={
-            "error": "서버 내부 오류가 발생했습니다.",
-            "detail": str(exc) if getattr(settings, 'DEBUG', False) else "Internal server error"
-        }
+        content={"detail": "서버 내부 오류가 발생했습니다."}
     )
 
 
