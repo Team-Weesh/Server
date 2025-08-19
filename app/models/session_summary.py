@@ -1,5 +1,6 @@
 from pydantic import BaseModel, field_validator
 from typing import List, Optional, Dict, Any
+from datetime import datetime
 
 class SummaryResponse(BaseModel):
     """요약 응답 모델 (공통)"""
@@ -37,3 +38,15 @@ class SessionSummaryResponse(BaseModel):
     processing_time: float
     success: bool
     source: str  # "database", "direct", "error"
+    summary_id: Optional[str] = None  # 저장된 요약 ID
+
+class SummaryRecord(BaseModel):
+    """요약 기록 모델 (DB 저장용)"""
+    user_id: Optional[str]
+    summary: str
+    keywords: List[str]
+    total_messages: int
+    processing_time: float
+    source: str
+    created_at: datetime
+    conversation_data: Optional[List[Dict[str, Any]]] = None  # 원본 대화 데이터 (선택적)

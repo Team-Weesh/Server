@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from app.models.query_input import Queryinput
-from app.models.session_summary import SessionEndRequest, SessionSummaryResponse
+from app.models.session_summary import SessionEndRequest, SessionSummaryResponse, SummaryRecord
 from app.services.chatbot_service import answer_chat
-from app.services.db_service import collection
+from app.services.db_service import collection, save_summary, get_summaries_by_user_id
 from app.services.summary_service import summary_service
 from app.utils.helpers import logger
 from datetime import datetime, timezone
@@ -77,7 +77,8 @@ async def end_session(request: SessionEndRequest):
                     total_messages=0,
                     processing_time=0.0,
                     success=False,
-                    source="database"
+                    source="database",
+                    summary_id=None
                 )
             
             # DB 메시지를 요약 형식으로 변환
@@ -95,6 +96,20 @@ async def end_session(request: SessionEndRequest):
             request.max_keywords
         )
         
+        # 요약 정보를 데이터베이스에 저장
+        summary_record = SummaryRecord(
+            user_id=request.user_id,
+            summary=summary_result.summary,
+            keywords=summary_result.keywords,
+            total_messages=summary_result.total_messages,
+            processing_time=summary_result.processing_time,
+            source=source,
+            created_at=datetime.now(timezone.utc),
+            conversation_data=conversation_data if source == "direct" else None
+        )
+        
+        summary_id = save_summary(summary_record)
+        
         return SessionSummaryResponse(
             user_id=request.user_id,
             summary=summary_result.summary,
@@ -102,10 +117,12 @@ async def end_session(request: SessionEndRequest):
             total_messages=summary_result.total_messages,
             processing_time=summary_result.processing_time,
             success=True,
-            source=source
+            source=source,
+            summary_id=summary_id
         )
         
     except Exception as e:
+        logger.error(f"요약 생성 중 오류: {e}")
         return SessionSummaryResponse(
             user_id=request.user_id,
             summary="요약 생성 중 오류가 발생했습니다.",
@@ -113,5 +130,23 @@ async def end_session(request: SessionEndRequest):
             total_messages=0,
             processing_time=0.0,
             success=False,
-            source="error"
+            source="error",
+            summary_id=None
+        )
+
+@router.get("/summaries")
+async def get_user_summaries(user_id: str = Query(...), limit: int = Query(default=5, le=50)):
+    """사용자별 요약 목록 조회"""
+    try:
+        summaries = get_summaries_by_user_id(user_id, limit)
+        return {
+            "user_id": user_id,
+            "summaries": summaries,
+            "total_count": len(summaries)
+        }
+    except Exception as e:
+        logger.error(f"사용자 요약 목록 조회 오류: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "요약 목록 조회 중 오류가 발생했습니다."}
         )
