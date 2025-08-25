@@ -78,7 +78,8 @@ public class JwtTokenValidatorImpl implements TokenValidator {
         }
     }
 
-    private Claims parseToken(String token) {
+    @Override
+    public Claims parseToken(String token) {
         return Jwts.parser()
                 .verifyWith(key)
                 .build()

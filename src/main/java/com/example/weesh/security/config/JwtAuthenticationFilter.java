@@ -31,6 +31,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (pathValidator.isPublicPath(requestURI)) {
+                if (requestURI.startsWith("/advice")) {
+                    accessTokenStrategy.validate(request, response);
+                    refreshTokenStrategy.validate(request, response);
+                }
                 chain.doFilter(request, response);
                 return;
             }

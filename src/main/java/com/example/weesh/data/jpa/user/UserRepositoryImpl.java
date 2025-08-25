@@ -37,4 +37,11 @@ public class UserRepositoryImpl implements UserRepository {
     public boolean existsByStudentNumber(int studentNumber) {
         return jpaUserRepository.existsByStudentNumber(studentNumber);
     }
+
+    @Override
+    public User findById(Long id) {
+        return jpaUserRepository.findById(id)
+                .map(userMapper::toDomain)
+                .orElse(null);
+    }
 }

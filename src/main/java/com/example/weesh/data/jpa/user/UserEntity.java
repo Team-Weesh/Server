@@ -1,12 +1,16 @@
 package com.example.weesh.data.jpa.user;
 
 import com.example.weesh.core.foundation.enums.UserRole;
+import com.example.weesh.data.jpa.advice.AdviceEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -40,6 +44,13 @@ public class UserEntity {
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private Set<UserRole> roles = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<AdviceEntity> advices = new ArrayList<>();
+
+    public UserEntity() {
+    }
 
     @PrePersist
     protected void onCreate() {

@@ -13,7 +13,7 @@ public class PathValidator {
     private final Set<String> publicPaths;
     private final Set<String> refreshTokenAllowedPaths;
 
-    public PathValidator(@Value("${security.public.paths:/v3/api-docs/**,/swagger-ui/**,/users/register/**,/auth/login,/error}") String[] publicPaths,
+    public PathValidator(@Value("${security.public.paths:/v3/api-docs/**,/swagger-ui/**,/users/register/**,/auth/login,/error,/advice}") String[] publicPaths,
                          @Value("${security.refresh.token.allowed.paths:/auth/reissue}") String[] refreshTokenAllowedPaths) {
         this.publicPaths = new HashSet<>(Set.of(publicPaths));
         this.refreshTokenAllowedPaths = new HashSet<>(Set.of(refreshTokenAllowedPaths));

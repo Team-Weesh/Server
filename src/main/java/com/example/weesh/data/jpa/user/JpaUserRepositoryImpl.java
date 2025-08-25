@@ -10,4 +10,5 @@ public interface JpaUserRepositoryImpl extends JpaRepository<UserEntity, Long> {
     Optional<UserEntity> findByUsername(String username);
     boolean existsByUsername(String username);
     boolean existsByStudentNumber(int studentNumber);
+    UserEntity findById(long id);
 }
