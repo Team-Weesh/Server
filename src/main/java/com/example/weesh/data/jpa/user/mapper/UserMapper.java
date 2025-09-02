@@ -5,6 +5,7 @@ import com.example.weesh.data.jpa.user.UserEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 @Component
@@ -24,6 +25,7 @@ public class UserMapper {
                 .createdDate(entity.getCreatedDate())
                 .lastModifiedDate(entity.getLastModifiedDate())
                 .roles(entity.getRoles() != null ? new HashSet<>(entity.getRoles()) : new HashSet<>())
+                .advices(entity.getAdvices() != null ? entity.getAdvices() : new ArrayList<>())
                 .build();
     }
 
@@ -45,6 +47,7 @@ public class UserMapper {
         entity.setLastModifiedDate(user.getLastModifiedDate() != null ? user.getLastModifiedDate() : now);
 
         entity.setRoles(user.getRoles() != null ? new HashSet<>(user.getRoles()) : new HashSet<>());
+        entity.setAdvices(user.getAdvices() != null ? user.getAdvices() : new ArrayList<>());
         return entity;
     }
 }

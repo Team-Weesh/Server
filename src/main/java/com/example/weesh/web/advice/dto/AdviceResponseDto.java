@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 @Getter
 public class AdviceResponseDto {
     private final Long id;
-    private final LocalDateTime desiredDate;
-    private final LocalDateTime desiredTime;
+    private final String desiredDate;
+    private final String desiredTime;
     private final String content;
     private final Long userId;
     private final Integer studentNumber;

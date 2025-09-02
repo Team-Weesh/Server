@@ -19,11 +19,11 @@ public class AdviceEntity {
 
     // 상담 희망 날짜
     @Column(name = "desired_date", nullable = false)
-    private LocalDateTime desiredDate;
+    private String desiredDate;
 
     // 상담 희망 시간
     @Column(name = "desired_time", nullable = false)
-    private LocalDateTime desiredTime;
+    private String desiredTime;
 
     // 상담 이유
     @Column(name = "content", nullable = false)

@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 @Getter
 public class Advice {
     private final Long id;
-    private final LocalDateTime desiredDate;
-    private final LocalDateTime desiredTime;
+    private final String desiredDate;
+    private final String desiredTime;
     private final String content;
     private final Long userId; // null 가능 (비로그인)
     private final Integer studentNumber; // null 가능 (로그인 시)
@@ -20,7 +20,7 @@ public class Advice {
     private final LocalDateTime lastModifiedDate;
 
     @Builder
-    public Advice(Long id, LocalDateTime desiredDate, LocalDateTime desiredTime, String content, Long userId, Integer studentNumber, String fullName, AdviceStatus status, LocalDateTime createdDate, LocalDateTime lastModifiedDate) {
+    public Advice(Long id, String desiredDate, String desiredTime, String content, Long userId, Integer studentNumber, String fullName, AdviceStatus status, LocalDateTime createdDate, LocalDateTime lastModifiedDate) {
         this.id = id;
         this.desiredDate = desiredDate;
         this.desiredTime = desiredTime;

@@ -2,14 +2,12 @@
 package com.example.weesh.core.user.domain;
 
 import com.example.weesh.core.foundation.enums.UserRole;
+import com.example.weesh.data.jpa.advice.AdviceEntity;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 public class User {
@@ -21,10 +19,12 @@ public class User {
     private final LocalDateTime createdDate;
     private final LocalDateTime lastModifiedDate;
     private final Set<UserRole> roles;
+    private final List<AdviceEntity> advices;
 
     @Builder
     public User(Long id, String username, String password, String fullName, int studentNumber,
-                LocalDateTime createdDate, LocalDateTime lastModifiedDate, Set<UserRole> roles) {
+                LocalDateTime createdDate, LocalDateTime lastModifiedDate, Set<UserRole> roles,
+                List<AdviceEntity> advices) {
         // 기본 검증
         Objects.requireNonNull(username, "Username cannot be null");
         Objects.requireNonNull(password, "Password cannot be null");
@@ -40,6 +40,7 @@ public class User {
         this.createdDate = createdDate != null ? createdDate : now;
         this.lastModifiedDate = lastModifiedDate != null ? lastModifiedDate : now;
 
+        this.advices = advices;
         // 불변 컬렉션으로 보호
         this.roles = roles != null ?
                 Collections.unmodifiableSet(new HashSet<>(roles)) :
@@ -53,19 +54,5 @@ public class User {
 
     public boolean isAdmin() {
         return hasRole(UserRole.ADMIN);
-    }
-
-    // 업데이트를 위한 빌더 생성
-    public User withUpdatedInfo(String fullName, String password) {
-        return User.builder()
-                .id(this.id)
-                .username(this.username)
-                .password(password != null ? password : this.password)
-                .fullName(fullName != null ? fullName : this.fullName)
-                .studentNumber(this.studentNumber)
-                .createdDate(this.createdDate)
-                .lastModifiedDate(LocalDateTime.now())
-                .roles(new HashSet<>(this.roles))
-                .build();
     }
 }

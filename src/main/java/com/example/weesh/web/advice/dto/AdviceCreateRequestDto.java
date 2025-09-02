@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 @Setter
 public class AdviceCreateRequestDto {
     @NotNull(message = "희망 날짜는 필수입니다.")
-    private LocalDateTime desiredDate;
+    private String desiredDate;
 
     @NotNull(message = "희망 시간은 필수입니다.")
-    private LocalDateTime desiredTime;
+    private String desiredTime;
 
     @NotBlank(message = "상담 내용은 필수입니다.")
     private String content;

@@ -50,6 +50,7 @@ public class UserEntity {
     private List<AdviceEntity> advices = new ArrayList<>();
 
     public UserEntity() {
+        this.advices = new ArrayList<>();
     }
 
     @PrePersist

@@ -14,6 +14,7 @@ import com.example.weesh.core.user.domain.User;
 import com.example.weesh.data.jwt.JwtTokenResponse;
 import com.example.weesh.web.auth.dto.AuthRequestDto;
 import com.example.weesh.web.auth.dto.ProfileResponseDto;
+import com.example.weesh.web.user.dto.UserResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -44,7 +45,8 @@ public class AuthService implements LoginUseCase, ProfileUseCase, TokenManagemen
         User user = authRepository.findByUsername(username)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND, "사용자를 찾을 수 없습니다."));
         Map<String, Object> response = new HashMap<>();
-        response.put("user", new com.example.weesh.web.user.dto.UserResponseDto(user));
+        response.put("user", new UserResponseDto(user));
+        response.put("adviceList", user.getAdvices());
         return responseMapper.toProfileResponseDto(response);
     }
 
