@@ -90,11 +90,11 @@ public class GlobalExceptionHandler {
 
         ApiResponse<?> response = ApiResponse.error(
                 ex.getMessage(),
-                HttpStatus.FORBIDDEN.value(),
+                HttpStatus.BAD_REQUEST.value(),
                 request.getRequestURI()
         );
 
-        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

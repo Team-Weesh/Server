@@ -41,10 +41,10 @@ public class UserService implements RegisterUserUseCase {
 
     private void validateUser(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
-            throw new DuplicateUserException("username", user.getUsername());
+            throw new DuplicateUserException("사용자 이름이 중복되었습니다. : ", user.getUsername());
         }
         if (userRepository.existsByStudentNumber(user.getStudentNumber())) {
-            throw new DuplicateUserException("studentNumber", String.valueOf(user.getStudentNumber()));
+            throw new DuplicateUserException("사용자 학번이 중복되었습니다. : ", String.valueOf(user.getStudentNumber()));
         }
     }
 }

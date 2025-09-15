@@ -9,4 +9,5 @@ public interface AdviceRepository {
     Advice save(Advice advice);
     Optional<Advice> findById(Long id);
     List<Advice> findAll();
+    boolean existsByDateAndTime(String desiredDate, String desiredTime);
 }

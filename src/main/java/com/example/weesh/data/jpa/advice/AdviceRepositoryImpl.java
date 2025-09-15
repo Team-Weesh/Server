@@ -2,6 +2,7 @@ package com.example.weesh.data.jpa.advice;
 
 import com.example.weesh.core.advice.application.AdviceRepository;
 import com.example.weesh.core.advice.domain.Advice;
+import com.example.weesh.core.foundation.enums.AdviceStatus;
 import com.example.weesh.data.jpa.advice.mapper.AdviceMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -33,5 +34,10 @@ public class AdviceRepositoryImpl implements AdviceRepository {
         return jpaRepository.findAll().stream()
                 .map(adviceMapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public boolean existsByDateAndTime(String desiredDate, String desiredTime) {
+        return jpaRepository.existsByDesiredDateAndDesiredTimeAndStatusNot(desiredDate, desiredTime, AdviceStatus.DELETED);
     }
 }
