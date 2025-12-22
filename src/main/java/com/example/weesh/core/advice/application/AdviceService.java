@@ -3,6 +3,7 @@ package com.example.weesh.core.advice.application;
 import com.example.weesh.core.advice.application.factory.AdviceFactory;
 import com.example.weesh.core.advice.application.useCase.*;
 import com.example.weesh.core.advice.domain.Advice;
+import com.example.weesh.core.advice.exception.DuplicateAdviceException;
 import com.example.weesh.core.auth.application.token.TokenResolver;
 import com.example.weesh.core.auth.application.token.TokenValidator;
 import com.example.weesh.core.user.application.UserRepository;
@@ -111,7 +112,7 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
 
     private void validateDuplicateAdvice(AdviceCreateRequestDto dto) {
         if (adviceRepository.existsByDateAndTime(dto.getDesiredDate(), dto.getDesiredTime())) {
-            throw new DuplicateUserException("이미 예약된 시간입니다. : ", dto.getDesiredDate() + "." + dto.getDesiredTime());
+            throw new DuplicateAdviceException("이미 예약된 시간입니다. : " + dto.getDesiredDate() + "." + dto.getDesiredTime());
         }
     }
 }
