@@ -32,10 +32,11 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
     public AdviceResponseDto createAdvice(AdviceCreateRequestDto dto, HttpServletRequest request) {
         String token = tokenResolver.resolveToken(request); // 요청에서 토큰 추출
         Long userId = token != null ? getUserIdFromToken(token) : null;
+        User user = userId != null ? userRepository.findById(userId) : null;
         validateAdviceRequest(dto, userId);
         validateDuplicateAdvice(dto);
         Advice advice = adviceFactory.createAdvice(dto, userId);
-        Advice savedAdvice = adviceRepository.save(advice);
+        Advice savedAdvice = adviceRepository.save(advice, user);
         return new AdviceResponseDto(savedAdvice);
     }
 
