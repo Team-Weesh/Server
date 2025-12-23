@@ -32,10 +32,11 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
     public AdviceResponseDto createAdvice(AdviceCreateRequestDto dto, HttpServletRequest request) {
         String token = tokenResolver.resolveToken(request); // 요청에서 토큰 추출
         Long userId = token != null ? getUserIdFromToken(token) : null;
-        validateAdviceRequest(dto, userId);
+        User user = userId != null ? userRepository.findById(userId) : null;
+        validateAdviceRequest(dto, userId, user);
         validateDuplicateAdvice(dto);
         Advice advice = adviceFactory.createAdvice(dto, userId);
-        Advice savedAdvice = adviceRepository.save(advice);
+        Advice savedAdvice = adviceRepository.save(advice, user);
         return new AdviceResponseDto(savedAdvice);
     }
 
@@ -89,13 +90,11 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
         }
     }
 
-    private void validateAdviceRequest(AdviceCreateRequestDto dto, Long userId) {
+    private void validateAdviceRequest(AdviceCreateRequestDto dto, Long userId, User user) {
         if (userId != null) {
             if (dto.getStudentNumber() != null || dto.getFullName() != null) {
                 throw new IllegalStateException("토큰 값이 있으면 학번 및 이름 필드엔 값이 없어야 합니다.");
             }
-            // 로그인 시 사용자 정보 자동 설정 (예시)
-            User user = userRepository.findById(userId);
             if (user == null) {
                 throw new IllegalStateException("User not found");
             }
