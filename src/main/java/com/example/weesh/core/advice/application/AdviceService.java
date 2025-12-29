@@ -3,6 +3,7 @@ package com.example.weesh.core.advice.application;
 import com.example.weesh.core.advice.application.factory.AdviceFactory;
 import com.example.weesh.core.advice.application.useCase.*;
 import com.example.weesh.core.advice.domain.Advice;
+import com.example.weesh.core.advice.exception.DuplicateAdviceException;
 import com.example.weesh.core.auth.application.token.TokenResolver;
 import com.example.weesh.core.auth.application.token.TokenValidator;
 import com.example.weesh.core.user.application.UserRepository;
@@ -16,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,9 +32,11 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
     public AdviceResponseDto createAdvice(AdviceCreateRequestDto dto, HttpServletRequest request) {
         String token = tokenResolver.resolveToken(request); // 요청에서 토큰 추출
         Long userId = token != null ? getUserIdFromToken(token) : null;
-        validateAdviceRequest(dto, userId);
+        User user = userId != null ? userRepository.findById(userId) : null;
+        validateAdviceRequest(dto, userId, user);
+        validateDuplicateAdvice(dto);
         Advice advice = adviceFactory.createAdvice(dto, userId);
-        Advice savedAdvice = adviceRepository.save(advice);
+        Advice savedAdvice = adviceRepository.save(advice, user);
         return new AdviceResponseDto(savedAdvice);
     }
 
@@ -88,13 +90,11 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
         }
     }
 
-    private void validateAdviceRequest(AdviceCreateRequestDto dto, Long userId) {
+    private void validateAdviceRequest(AdviceCreateRequestDto dto, Long userId, User user) {
         if (userId != null) {
             if (dto.getStudentNumber() != null || dto.getFullName() != null) {
                 throw new IllegalStateException("토큰 값이 있으면 학번 및 이름 필드엔 값이 없어야 합니다.");
             }
-            // 로그인 시 사용자 정보 자동 설정 (예시)
-            User user = userRepository.findById(userId);
             if (user == null) {
                 throw new IllegalStateException("User not found");
             }
@@ -104,6 +104,12 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
             if (dto.getStudentNumber() == null || dto.getFullName() == null) {
                 throw new IllegalStateException("비로그인 시 학번과 이름은 필수입니다.");
             }
+        }
+    }
+
+    private void validateDuplicateAdvice(AdviceCreateRequestDto dto) {
+        if (adviceRepository.existsByDateAndTime(dto.getDesiredDate(), dto.getDesiredTime())) {
+            throw new DuplicateAdviceException("이미 예약된 시간입니다. : " + dto.getDesiredDate() + "." + dto.getDesiredTime());
         }
     }
 }
