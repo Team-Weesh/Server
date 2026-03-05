@@ -33,13 +33,16 @@ jobs:
     needs: build  # build가 완료되어야 실행됨
 
     steps:
+      - name: jar 존재 확인
+        run: ls -l build/libs/weesh-*.jar
+
       - name: jar를 EC2로 복사
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
-          source: "build/libs/*.jar"
+          source: "build/libs/weesh-*.jar"
           target: "/home/ec2-user/app/"
 
       - name: EC2에서 deploy.sh 실행
