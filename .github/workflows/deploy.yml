@@ -26,7 +26,9 @@ jobs:
         run: ./gradlew bootJar -x test
 
       - name: 빌드 결과 확인
-        run: ls -l build/libs/weesh-*.jar
+        run: |
+          JAR_FILE=$(ls build/libs/*.jar | head -n 1)
+          echo "Jar 파일: $JAR_FILE"
 
   deploy:
     runs-on: ubuntu-latest
