@@ -10,44 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 코드 체크아웃
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: gradlew 실행 권한 부여
+      - name: Grant execute permission
         run: chmod +x ./gradlew
 
-      - name: JDK 설치
+      - name: Setup JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'corretto'
           java-version: '24'
 
-      - name: 빌드 (bootJar + 테스트 제외)
+      - name: Build
         run: ./gradlew bootJar -x test
 
-      - name: 빌드 결과 확인
-        run: |
-          JAR_FILE=$(ls build/libs/*.jar | head -n 1)
-          echo "Jar 파일: $JAR_FILE"
+      - name: Rename jar
+        run: mv build/libs/*.jar app.jar
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build  # build가 완료되어야 실행됨
-
-    steps:
-      - name: jar 존재 확인
-        run: ls -l build/libs/weesh-*.jar
-
-      - name: jar를 EC2로 복사
+      - name: SCP jar to EC2
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
-          source: "build/libs/weesh-*.jar"
+          source: "app.jar"
           target: "/home/ec2-user/app/"
 
-      - name: EC2에서 deploy.sh 실행
+      - name: Deploy
         env:
           SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
           SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
