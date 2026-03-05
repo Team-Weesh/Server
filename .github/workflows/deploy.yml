@@ -65,4 +65,5 @@ jobs:
             export SPRING_JPA_HIBERNATE_DDL_AUTO=$SPRING_JPA_HIBERNATE_DDL_AUTO
             export SPRING_REDIS_HOST=$SPRING_REDIS_HOST
             export SPRING_REDIS_PORT=$SPRING_REDIS_PORT
+            
             ./deploy.sh
