@@ -22,7 +22,7 @@ jobs:
           java-version: '24'
 
       - name: Build
-        run: ./gradlew build -x test
+        run: ./gradlew bootJar -x test
 
       - name: Rename jar
         run: mv build/libs/*.jar app.jar
