@@ -10,29 +10,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ 코드 체크아웃
       - uses: actions/checkout@v3
 
-      # 2️⃣ gradlew 실행 권한 부여
       - name: Grant execute permission
         run: chmod +x ./gradlew
 
-      # 3️⃣ JDK 설치
       - name: Setup JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'corretto'
           java-version: '24'
 
-      # 4️⃣ 빌드
       - name: Build
         run: ./gradlew build
 
-      # 5️⃣ jar 이름 통일
       - name: Rename jar
         run: mv build/libs/*.jar app.jar
 
-      # 6️⃣ jar를 EC2로 복사
       - name: SCP jar to EC2
         uses: appleboy/scp-action@master
         with:
@@ -42,20 +36,19 @@ jobs:
           source: "app.jar"
           target: "/home/ec2-user/app/"
 
-      # 7️⃣ EC2에서 배포
       - name: Deploy
+        env:
+          SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          SPRING_JPA_HIBERNATE_DDL_AUTO: ${{ secrets.SPRING_JPA_HIBERNATE_DDL_AUTO }}
+          SPRING_REDIS_HOST: ${{ secrets.SPRING_REDIS_HOST }}
+          SPRING_REDIS_PORT: ${{ secrets.SPRING_REDIS_PORT }}
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
-          env:
-            SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
-            SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
-            SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-            SPRING_JPA_HIBERNATE_DDL_AUTO: ${{ secrets.SPRING_JPA_HIBERNATE_DDL_AUTO }}
-            SPRING_REDIS_HOST: ${{ secrets.SPRING_REDIS_HOST }}
-            SPRING_REDIS_PORT: ${{ secrets.SPRING_REDIS_PORT }}
           script: |
             cd /home/ec2-user/app
             chmod +x deploy.sh
@@ -65,5 +58,4 @@ jobs:
             export SPRING_JPA_HIBERNATE_DDL_AUTO=$SPRING_JPA_HIBERNATE_DDL_AUTO
             export SPRING_REDIS_HOST=$SPRING_REDIS_HOST
             export SPRING_REDIS_PORT=$SPRING_REDIS_PORT
-            
             ./deploy.sh
