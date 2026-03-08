@@ -20,9 +20,5 @@ public class AdviceCreateRequestDto {
 
     @NotBlank(message = "상담 내용은 필수입니다.")
     private String content;
-
-    private Integer studentNumber; // 비로그인 시 필수
-
-    private String fullName; // 비로그인 시 필수
 }
 

@@ -56,7 +56,6 @@ public class AdviceController {
             HttpServletRequest request) {
         AdviceResponseDto response = adviceCreateUseCase.createAdvice(dto, request);
 
-        LoggingUtil.info("New advice created for student number: {}", dto.getFullName());
         return ResponseEntity
                 .ok(ApiResponse
                         .success("상담 예약 성공", response));
