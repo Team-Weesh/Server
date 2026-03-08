@@ -2,7 +2,6 @@ package com.example.weesh.data.jpa.advice.mapper;
 
 import com.example.weesh.core.advice.domain.Advice;
 import com.example.weesh.core.foundation.enums.AdviceStatus;
-import com.example.weesh.core.user.application.UserRepository;
 import com.example.weesh.core.user.domain.User;
 import com.example.weesh.data.jpa.advice.AdviceEntity;
 import com.example.weesh.data.jpa.user.UserEntity;
@@ -15,7 +14,6 @@ import java.time.LocalDateTime;
 @Component
 @RequiredArgsConstructor
 public class AdviceMapper {
-    private final UserRepository userRepository;
     private final UserMapper userMapper;
 
     public Advice toDomain(AdviceEntity entity) {
@@ -34,15 +32,14 @@ public class AdviceMapper {
                 .build();
     }
 
-    public AdviceEntity toEntity(Advice advice) {
+    public AdviceEntity toEntity(Advice advice, User user) {
         if (advice == null) return null;
         AdviceEntity entity = new AdviceEntity();
         entity.setId(advice.getId());
         entity.setDesiredDate(advice.getDesiredDate());
         entity.setDesiredTime(advice.getDesiredTime());
         entity.setContent(advice.getContent());
-        if (advice.getUserId() != null) {
-            User user = userRepository.findById(advice.getUserId());
+        if (user != null) {
             UserEntity userEntity = userMapper.toEntity(user);
             entity.setUser(userEntity);
         }

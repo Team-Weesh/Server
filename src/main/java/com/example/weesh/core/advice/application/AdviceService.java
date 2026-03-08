@@ -4,6 +4,8 @@ import com.example.weesh.core.advice.application.factory.AdviceFactory;
 import com.example.weesh.core.advice.application.useCase.*;
 import com.example.weesh.core.advice.domain.Advice;
 import com.example.weesh.core.advice.exception.DuplicateAdviceException;
+import com.example.weesh.core.advice.exception.UnauthorizedUserException;
+import com.example.weesh.core.advice.exception.UserNotFoundException;
 import com.example.weesh.core.auth.application.token.TokenResolver;
 import com.example.weesh.core.auth.application.token.TokenValidator;
 import com.example.weesh.core.user.application.UserRepository;
@@ -31,11 +33,21 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
     @Override
     public AdviceResponseDto createAdvice(AdviceCreateRequestDto dto, HttpServletRequest request) {
         String token = tokenResolver.resolveToken(request); // 요청에서 토큰 추출
-        Long userId = token != null ? getUserIdFromToken(token) : null;
-        validateAdviceRequest(dto, userId);
+
+        if (token == null) {
+            throw new UnauthorizedUserException("로그인이 필요합니다.");
+        }
+
+        Long userId = getUserIdFromToken(token);
+        User user = userRepository.findById(userId);
+
+        if (user == null) {
+            throw new UserNotFoundException("존재하지 않는 유저입니다.");
+        }
+
         validateDuplicateAdvice(dto);
-        Advice advice = adviceFactory.createAdvice(dto, userId);
-        Advice savedAdvice = adviceRepository.save(advice);
+        Advice advice = adviceFactory.createAdvice(dto, userId, user.getStudentNumber(), user.getFullName());
+        Advice savedAdvice = adviceRepository.save(advice, user);
         return new AdviceResponseDto(savedAdvice);
     }
 
@@ -80,31 +92,14 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
         return new AdviceResponseDto(updatedAdvice);
     }
 
+    // TODO: 상담 불가 날짜 추가 및 예약 차단
+
     private Long getUserIdFromToken(String token) {
         try {
             tokenValidator.validateToken(token); // 토큰 유효성 검증
             return tokenValidator.parseToken(token).get("userId", Long.class); // userId 추출
         } catch (Exception e) {
             throw new IllegalArgumentException("유효한 사용자 ID를 토큰에서 추출할 수 없습니다.", e);
-        }
-    }
-
-    private void validateAdviceRequest(AdviceCreateRequestDto dto, Long userId) {
-        if (userId != null) {
-            if (dto.getStudentNumber() != null || dto.getFullName() != null) {
-                throw new IllegalStateException("토큰 값이 있으면 학번 및 이름 필드엔 값이 없어야 합니다.");
-            }
-            // 로그인 시 사용자 정보 자동 설정 (예시)
-            User user = userRepository.findById(userId);
-            if (user == null) {
-                throw new IllegalStateException("User not found");
-            }
-            dto.setStudentNumber(user.getStudentNumber());
-            dto.setFullName(user.getFullName());
-        } else {
-            if (dto.getStudentNumber() == null || dto.getFullName() == null) {
-                throw new IllegalStateException("비로그인 시 학번과 이름은 필수입니다.");
-            }
         }
     }
 

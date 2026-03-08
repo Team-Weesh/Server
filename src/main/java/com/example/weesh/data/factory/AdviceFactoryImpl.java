@@ -13,14 +13,14 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class AdviceFactoryImpl implements AdviceFactory {
     @Override
-    public Advice createAdvice(AdviceCreateRequestDto dto, Long userId) {
+    public Advice createAdvice(AdviceCreateRequestDto dto, Long userId, Integer studentNumber, String fullName) {
         return Advice.builder()
                 .desiredDate(dto.getDesiredDate())
                 .desiredTime(dto.getDesiredTime())
                 .content(dto.getContent())
                 .userId(userId)
-                .studentNumber(dto.getStudentNumber())
-                .fullName(dto.getFullName())
+                .studentNumber(studentNumber)
+                .fullName(fullName)
                 .status(AdviceStatus.PENDING)
                 .createdDate(LocalDateTime.now())
                 .lastModifiedDate(LocalDateTime.now())
