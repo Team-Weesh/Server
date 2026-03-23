@@ -8,6 +8,7 @@ import com.example.weesh.core.advice.exception.UnauthorizedUserException;
 import com.example.weesh.core.advice.exception.UserNotFoundException;
 import com.example.weesh.core.auth.application.token.TokenResolver;
 import com.example.weesh.core.auth.application.token.TokenValidator;
+import com.example.weesh.core.unavailableDate.application.UnavailableDateRepository;
 import com.example.weesh.core.user.application.UserRepository;
 import com.example.weesh.core.user.domain.User;
 import com.example.weesh.web.advice.dto.AdviceCreateRequestDto;
@@ -28,6 +29,7 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
     private final TokenResolver tokenResolver;
     private final UserRepository userRepository;
     private final TokenValidator tokenValidator;
+    private final UnavailableDateRepository unavailableDateRepository;
 
     @Transactional
     @Override
@@ -45,6 +47,7 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
             throw new UserNotFoundException("존재하지 않는 유저입니다.");
         }
 
+        validateUnavailableDate(dto.getDesiredDate());
         validateDuplicateAdvice(dto);
         Advice advice = adviceFactory.createAdvice(dto, userId, user.getStudentNumber(), user.getFullName());
         Advice savedAdvice = adviceRepository.save(advice, user);
@@ -92,7 +95,11 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
         return new AdviceResponseDto(updatedAdvice);
     }
 
-    // TODO: 상담 불가 날짜 추가 및 예약 차단
+    private void validateUnavailableDate(String desiredDate) {
+        if (unavailableDateRepository.existsByDate(desiredDate)) {
+            throw new IllegalArgumentException("해당 날짜는 상담이 불가능한 날짜입니다: " + desiredDate);
+        }
+    }
 
     private Long getUserIdFromToken(String token) {
         tokenValidator.validateToken(token);

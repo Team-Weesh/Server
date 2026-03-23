@@ -41,6 +41,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            if ("GET".equalsIgnoreCase(request.getMethod()) && pathValidator.isPublicGetOnlyPath(requestURI)) {
+                chain.doFilter(request, response);
+                return;
+            }
+
             List.of(refreshTokenStrategy, accessTokenStrategy)
                     .forEach(strategy -> {
                         try {
