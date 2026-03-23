@@ -1,51 +1,113 @@
-package com.example.weesh.core.unavailableDate.application;
+package com.example.weesh.core.unavailabledate.application;
 
-import com.example.weesh.core.unavailableDate.application.useCase.UnavailableDateCreateUseCase;
-import com.example.weesh.core.unavailableDate.application.useCase.UnavailableDateDeleteUseCase;
-import com.example.weesh.core.unavailableDate.application.useCase.UnavailableDateReadUseCase;
-import com.example.weesh.core.unavailableDate.domain.UnavailableDate;
+import com.example.weesh.core.unavailabledate.application.factory.UnAvailableDateFactory;
+import com.example.weesh.core.unavailabledate.application.useCase.*;
+import com.example.weesh.core.unavailabledate.domain.UnAvailableDate;
+import com.example.weesh.core.unavailabledate.exception.UnauthorizedUserException;
+import com.example.weesh.core.auth.application.token.TokenResolver;
+import com.example.weesh.core.auth.application.token.TokenValidator;
+import com.example.weesh.core.user.application.UserRepository;
+import com.example.weesh.core.user.domain.User;
+import com.example.weesh.web.unavailabledate.dto.UnAvailableDateCreateRequestDto;
+import com.example.weesh.web.unavailabledate.dto.UnAvailableDateResponseDto;
+import com.example.weesh.web.unavailabledate.dto.UnAvailableDateUpdateRequestDto;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class UnavailableDateService implements UnavailableDateCreateUseCase, UnavailableDateReadUseCase, UnavailableDateDeleteUseCase {
-    private final UnavailableDateRepository unavailableDateRepository;
+public class UnAvailableDateService implements UnAvailableDateCreateUseCase, UnAvailableDateReadUseCase, UnAvailableDateUpdateUseCase, UnAvailableDateDeleteUseCase {
+    private final UnAvailableDateRepository unAvailableDateRepository;
+    private final UnAvailableDateFactory unAvailableDateFactory;
+    private final TokenResolver tokenResolver;
+    private final UserRepository userRepository;
+    private final TokenValidator tokenValidator;
 
-    @Override
     @Transactional
-    public UnavailableDate createUnavailableDate(LocalDateTime dateTime, String reason) {
-        if (unavailableDateRepository.existsByDateTime(dateTime)) {
-            throw new IllegalArgumentException("이미 등록된 상담 불가 시간입니다: " + dateTime);
+    @Override
+    public UnAvailableDateResponseDto createUnAvailableDate(UnAvailableDateCreateRequestDto dto, HttpServletRequest request) {
+        String token = tokenResolver.resolveToken(request);
+
+        if (token == null) {
+            throw new UnauthorizedUserException("로그인이 필요합니다.");
         }
 
-        UnavailableDate unavailableDate = UnavailableDate.builder()
-                .dateTime(dateTime)
-                .reason(reason)
-                .build();
+        Long userId = getUserIdFromToken(token);
+        User user = userRepository.findById(userId);
 
-        try {
-            return unavailableDateRepository.save(unavailableDate);
-        } catch (DataIntegrityViolationException e) {
-            throw new DataIntegrityViolationException("상담 불가 시간 저장 중 데이터 무결성 오류가 발생했습니다.", e);
+        if (user == null || !user.isAdmin()) {
+            throw new UnauthorizedUserException("관리자 권한이 필요합니다.");
         }
+
+        UnAvailableDate unAvailableDate = unAvailableDateFactory.createUnAvailableDate(dto);
+        UnAvailableDate savedUnAvailableDate = unAvailableDateRepository.save(unAvailableDate);
+        return new UnAvailableDateResponseDto(savedUnAvailableDate);
     }
 
     @Override
-    public List<UnavailableDate> getUnavailableDates() {
-        return unavailableDateRepository.findAll();
+    public List<UnAvailableDateResponseDto> getUnAvailableDates() {
+        List<UnAvailableDate> unAvailableDateList = unAvailableDateRepository.findAll();
+        return unAvailableDateList.stream()
+                .map(UnAvailableDateResponseDto::new)
+                .toList();
     }
 
-    @Override
     @Transactional
-    public void deleteUnavailableDate(Long id) {
-        unavailableDateRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 ID: " + id + "의 상담 불가 날짜를 찾을 수 없습니다."));
-        unavailableDateRepository.deleteById(id);
+    @Override
+    public UnAvailableDateResponseDto activateUnAvailableDate(Long id, HttpServletRequest request) {
+        validateAdmin(request);
+        UnAvailableDate unAvailableDate = unAvailableDateRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 ID: " + id + "의 불가 날짜를 찾을 수 없습니다."));
+
+        unAvailableDate.activate();
+        UnAvailableDate updatedUnAvailableDate = unAvailableDateRepository.save(unAvailableDate);
+        return new UnAvailableDateResponseDto(updatedUnAvailableDate);
+    }
+
+    @Transactional
+    @Override
+    public UnAvailableDateResponseDto deactivateUnAvailableDate(Long id, HttpServletRequest request) {
+        validateAdmin(request);
+        UnAvailableDate unAvailableDate = unAvailableDateRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 ID: " + id + "의 불가 날짜를 찾을 수 없습니다."));
+
+        unAvailableDate.deactivate();
+        UnAvailableDate updatedUnAvailableDate = unAvailableDateRepository.save(unAvailableDate);
+        return new UnAvailableDateResponseDto(updatedUnAvailableDate);
+    }
+
+    @Transactional
+    @Override
+    public void deleteUnAvailableDate(Long id, HttpServletRequest request) {
+        validateAdmin(request);
+        UnAvailableDate unAvailableDate = unAvailableDateRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 ID: " + id + "의 불가 날짜를 찾을 수 없습니다."));
+
+        unAvailableDateRepository.delete(unAvailableDate);
+    }
+
+    private Long getUserIdFromToken(String token) {
+        tokenValidator.validateToken(token);
+        Long userId = tokenValidator.parseToken(token).get("userId", Long.class);
+        if (userId == null) {
+            throw new UnauthorizedUserException("유효한 사용자 Id를 토큰에서 추출할 수 없습니다.");
+        }
+        return userId;
+    }
+
+    private void validateAdmin(HttpServletRequest request) {
+        String token = tokenResolver.resolveToken(request);
+        if (token == null) {
+            throw new UnauthorizedUserException("로그인이 필요합니다.");
+        }
+        Long userId = getUserIdFromToken(token);
+        User user = userRepository.findById(userId);
+        if (user == null || !user.isAdmin()) {
+            throw new UnauthorizedUserException("관리자 권한이 필요합니다.");
+        }
     }
 }

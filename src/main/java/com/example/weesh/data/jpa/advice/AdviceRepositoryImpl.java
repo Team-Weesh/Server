@@ -45,4 +45,11 @@ public class AdviceRepositoryImpl implements AdviceRepository {
     public boolean existsByDateAndTime(String desiredDate, String desiredTime) {
         return jpaRepository.existsByDesiredDateAndDesiredTimeAndStatusNot(desiredDate, desiredTime, AdviceStatus.DELETED);
     }
+
+    @Override
+    public List<Advice> findActiveByDesiredDateStartingWith(String yearMonth) {
+        return jpaRepository.findByDesiredDateStartingWithAndStatusNot(yearMonth, AdviceStatus.DELETED).stream()
+                .map(adviceMapper::toDomain)
+                .toList();
+    }
 }
