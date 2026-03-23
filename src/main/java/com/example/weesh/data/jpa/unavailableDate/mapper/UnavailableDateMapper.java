@@ -4,8 +4,6 @@ import com.example.weesh.core.unavailableDate.domain.UnavailableDate;
 import com.example.weesh.data.jpa.unavailableDate.UnavailableDateEntity;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-
 @Component
 public class UnavailableDateMapper {
 
@@ -26,8 +24,6 @@ public class UnavailableDateMapper {
         entity.setId(domain.getId());
         entity.setDate(domain.getDate());
         entity.setReason(domain.getReason());
-        entity.setCreatedDate(domain.getCreatedDate() != null ? domain.getCreatedDate() : LocalDateTime.now());
-        entity.setLastModifiedDate(domain.getLastModifiedDate() != null ? domain.getLastModifiedDate() : LocalDateTime.now());
         return entity;
     }
 }

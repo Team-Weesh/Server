@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -29,8 +28,6 @@ public class UnavailableDateService implements UnavailableDateCreateUseCase, Una
         UnavailableDate unavailableDate = UnavailableDate.builder()
                 .date(dto.getDate())
                 .reason(dto.getReason())
-                .createdDate(LocalDateTime.now())
-                .lastModifiedDate(LocalDateTime.now())
                 .build();
 
         try {
