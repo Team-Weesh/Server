@@ -6,6 +6,7 @@ import com.example.weesh.data.jpa.unavailableDate.mapper.UnavailableDateMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,8 +36,8 @@ public class UnavailableDateRepositoryImpl implements UnavailableDateRepository 
     }
 
     @Override
-    public boolean existsByDate(String date) {
-        return jpaRepository.existsByDate(date);
+    public boolean existsByDateTime(LocalDateTime dateTime) {
+        return jpaRepository.existsByDateTime(dateTime);
     }
 
     @Override
