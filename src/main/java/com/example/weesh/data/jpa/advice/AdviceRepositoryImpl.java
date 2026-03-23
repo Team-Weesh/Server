@@ -48,7 +48,8 @@ public class AdviceRepositoryImpl implements AdviceRepository {
 
     @Override
     public List<Advice> findActiveByDesiredDateStartingWith(String yearMonth) {
-        return jpaRepository.findByDesiredDateStartingWithAndStatusNot(yearMonth, AdviceStatus.DELETED).stream()
+        List<AdviceStatus> excludedStatuses = List.of(AdviceStatus.DELETED, AdviceStatus.REJECTED);
+        return jpaRepository.findByDesiredDateStartingWithAndStatusNotIn(yearMonth, excludedStatuses).stream()
                 .map(adviceMapper::toDomain)
                 .toList();
     }
