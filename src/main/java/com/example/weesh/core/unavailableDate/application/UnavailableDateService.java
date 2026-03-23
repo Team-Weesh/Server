@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -18,21 +19,20 @@ public class UnavailableDateService implements UnavailableDateCreateUseCase, Una
 
     @Override
     @Transactional
-    public UnavailableDate createUnavailableDate(String date, String time, String reason) {
-        if (unavailableDateRepository.existsByDateAndTime(date, time)) {
-            throw new IllegalArgumentException("이미 등록된 상담 불가 시간입니다: " + date + " " + time);
+    public UnavailableDate createUnavailableDate(LocalDateTime dateTime, String reason) {
+        if (unavailableDateRepository.existsByDateTime(dateTime)) {
+            throw new IllegalArgumentException("이미 등록된 상담 불가 시간입니다: " + dateTime);
         }
 
         UnavailableDate unavailableDate = UnavailableDate.builder()
-                .date(date)
-                .time(time)
+                .dateTime(dateTime)
                 .reason(reason)
                 .build();
 
         try {
             return unavailableDateRepository.save(unavailableDate);
         } catch (DataIntegrityViolationException e) {
-            throw new IllegalArgumentException("이미 등록된 상담 불가 시간입니다: " + date + " " + time);
+            throw new DataIntegrityViolationException("상담 불가 시간 저장 중 데이터 무결성 오류가 발생했습니다.", e);
         }
     }
 

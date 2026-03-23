@@ -38,7 +38,7 @@ public class UnavailableDateController {
     @PostMapping
     public ResponseEntity<ApiResponse<UnavailableDateResponseDto>> createUnavailableDate(
             @Valid @RequestBody UnavailableDateCreateRequestDto dto) {
-        UnavailableDate created = createUseCase.createUnavailableDate(dto.getDate(), dto.getTime(), dto.getReason());
+        UnavailableDate created = createUseCase.createUnavailableDate(dto.toDateTime(), dto.getReason());
         UnavailableDateResponseDto response = new UnavailableDateResponseDto(created);
         return ResponseEntity
                 .status(HttpStatus.CREATED)

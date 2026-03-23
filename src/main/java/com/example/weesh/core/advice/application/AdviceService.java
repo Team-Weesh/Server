@@ -19,6 +19,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -96,7 +99,8 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
     }
 
     private void validateUnavailableDate(String desiredDate, String desiredTime) {
-        if (unavailableDateRepository.existsByDateAndTime(desiredDate, desiredTime)) {
+        LocalDateTime dateTime = LocalDateTime.of(LocalDate.parse(desiredDate), LocalTime.parse(desiredTime));
+        if (unavailableDateRepository.existsByDateTime(dateTime)) {
             throw new IllegalArgumentException("해당 시간은 상담이 불가능합니다: " + desiredDate + " " + desiredTime);
         }
     }
