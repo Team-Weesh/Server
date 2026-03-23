@@ -16,6 +16,7 @@ public class AdviceCreateRequestDto {
     private String desiredDate;
 
     @NotNull(message = "희망 시간은 필수입니다.")
+    @Pattern(regexp = "^\\d{2}:\\d{2}$", message = "올바른 시간 형식이 아닙니다. 예시: '09:00'")
     private String desiredTime;
 
     @NotBlank(message = "상담 내용은 필수입니다.")

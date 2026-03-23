@@ -11,5 +11,6 @@ public interface UnavailableDateRepository {
     Optional<UnavailableDate> findById(Long id);
     List<UnavailableDate> findAll();
     boolean existsByDateTime(LocalDateTime dateTime);
+    List<UnavailableDate> findByDateTimeBetween(LocalDateTime start, LocalDateTime end);
     void deleteById(Long id);
 }

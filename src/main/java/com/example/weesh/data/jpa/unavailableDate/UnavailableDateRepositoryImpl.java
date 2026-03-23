@@ -41,6 +41,13 @@ public class UnavailableDateRepositoryImpl implements UnavailableDateRepository 
     }
 
     @Override
+    public List<UnavailableDate> findByDateTimeBetween(LocalDateTime start, LocalDateTime end) {
+        return jpaRepository.findByDateTimeBetween(start, end).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public void deleteById(Long id) {
         jpaRepository.deleteById(id);
     }
