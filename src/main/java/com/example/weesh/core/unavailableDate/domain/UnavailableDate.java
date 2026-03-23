@@ -23,12 +23,19 @@ public class UnavailableDate {
     }
 
     public void update(String date, String reason) {
-        if (date != null) {
+        boolean changed = false;
+
+        if (date != null && !date.equals(this.date)) {
             this.date = date;
+            changed = true;
         }
-        if (reason != null) {
+        if (reason != null && !reason.equals(this.reason)) {
             this.reason = reason;
+            changed = true;
         }
-        this.lastModifiedDate = LocalDateTime.now();
+
+        if (changed) {
+            this.lastModifiedDate = LocalDateTime.now();
+        }
     }
 }
