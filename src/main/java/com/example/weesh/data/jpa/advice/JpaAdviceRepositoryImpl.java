@@ -4,7 +4,10 @@ import com.example.weesh.core.foundation.enums.AdviceStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface JpaAdviceRepositoryImpl extends JpaRepository<AdviceEntity, Long> {
     boolean existsByDesiredDateAndDesiredTimeAndStatusNot(String desiredDate, String desiredTime, AdviceStatus status);
+    List<AdviceEntity> findByDesiredDateStartingWithAndStatusNotIn(String yearMonth, List<AdviceStatus> statuses);
 }

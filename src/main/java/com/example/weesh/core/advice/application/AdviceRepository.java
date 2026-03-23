@@ -12,4 +12,5 @@ public interface AdviceRepository {
     Optional<Advice> findById(Long id);
     List<Advice> findAll();
     boolean existsByDateAndTime(String desiredDate, String desiredTime);
+    List<Advice> findActiveByDesiredDateStartingWith(String yearMonth);
 }

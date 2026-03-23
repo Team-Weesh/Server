@@ -16,7 +16,7 @@ public class PathValidator {
 
     public PathValidator(@Value("${security.public.paths:/v3/api-docs/**,/swagger-ui/**,/users/register/**,/auth/login,/error,/advice}") String[] publicPaths,
                          @Value("${security.refresh.token.allowed.paths:/auth/reissue}") String[] refreshTokenAllowedPaths,
-                         @Value("${security.public.get-only.paths:/unavailable-dates}") String[] publicGetOnlyPaths) {
+                         @Value("${security.public.get-only.paths:/unavailable-dates,/unavailable-times}") String[] publicGetOnlyPaths) {
         this.publicPaths = new HashSet<>(Set.of(publicPaths));
         this.refreshTokenAllowedPaths = new HashSet<>(Set.of(refreshTokenAllowedPaths));
         this.publicGetOnlyPaths = new HashSet<>(Set.of(publicGetOnlyPaths));
