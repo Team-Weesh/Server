@@ -8,14 +8,14 @@ import java.time.LocalDateTime;
 @Getter
 public class UnavailableDateResponseDto {
     private final Long id;
-    private final String date;
+    private final LocalDateTime dateTime;
     private final String reason;
     private final LocalDateTime createdDate;
     private final LocalDateTime lastModifiedDate;
 
     public UnavailableDateResponseDto(UnavailableDate unavailableDate) {
         this.id = unavailableDate.getId();
-        this.date = unavailableDate.getDate();
+        this.dateTime = unavailableDate.getDateTime();
         this.reason = unavailableDate.getReason();
         this.createdDate = unavailableDate.getCreatedDate();
         this.lastModifiedDate = unavailableDate.getLastModifiedDate();

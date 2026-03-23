@@ -14,8 +14,8 @@ public class UnavailableDateEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "date", nullable = false, unique = true)
-    private String date;
+    @Column(name = "date_time", nullable = false, unique = true)
+    private LocalDateTime dateTime;
 
     @Column(name = "reason")
     private String reason;
