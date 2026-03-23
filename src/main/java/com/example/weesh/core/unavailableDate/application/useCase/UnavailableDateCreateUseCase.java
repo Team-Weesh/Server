@@ -1,8 +1,7 @@
 package com.example.weesh.core.unavailableDate.application.useCase;
 
-import com.example.weesh.web.unavailableDate.dto.UnavailableDateCreateRequestDto;
-import com.example.weesh.web.unavailableDate.dto.UnavailableDateResponseDto;
+import com.example.weesh.core.unavailableDate.domain.UnavailableDate;
 
 public interface UnavailableDateCreateUseCase {
-    UnavailableDateResponseDto createUnavailableDate(UnavailableDateCreateRequestDto dto);
+    UnavailableDate createUnavailableDate(String date, String reason);
 }

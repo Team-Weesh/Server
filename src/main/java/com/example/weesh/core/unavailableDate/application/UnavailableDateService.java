@@ -4,8 +4,6 @@ import com.example.weesh.core.unavailableDate.application.useCase.UnavailableDat
 import com.example.weesh.core.unavailableDate.application.useCase.UnavailableDateDeleteUseCase;
 import com.example.weesh.core.unavailableDate.application.useCase.UnavailableDateReadUseCase;
 import com.example.weesh.core.unavailableDate.domain.UnavailableDate;
-import com.example.weesh.web.unavailableDate.dto.UnavailableDateCreateRequestDto;
-import com.example.weesh.web.unavailableDate.dto.UnavailableDateResponseDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,29 +18,26 @@ public class UnavailableDateService implements UnavailableDateCreateUseCase, Una
 
     @Override
     @Transactional
-    public UnavailableDateResponseDto createUnavailableDate(UnavailableDateCreateRequestDto dto) {
-        if (unavailableDateRepository.existsByDate(dto.getDate())) {
-            throw new IllegalArgumentException("이미 등록된 상담 불가 날짜입니다: " + dto.getDate());
+    public UnavailableDate createUnavailableDate(String date, String reason) {
+        if (unavailableDateRepository.existsByDate(date)) {
+            throw new IllegalArgumentException("이미 등록된 상담 불가 날짜입니다: " + date);
         }
 
         UnavailableDate unavailableDate = UnavailableDate.builder()
-                .date(dto.getDate())
-                .reason(dto.getReason())
+                .date(date)
+                .reason(reason)
                 .build();
 
         try {
-            UnavailableDate saved = unavailableDateRepository.save(unavailableDate);
-            return new UnavailableDateResponseDto(saved);
+            return unavailableDateRepository.save(unavailableDate);
         } catch (DataIntegrityViolationException e) {
-            throw new IllegalArgumentException("이미 등록된 상담 불가 날짜입니다: " + dto.getDate());
+            throw new IllegalArgumentException("이미 등록된 상담 불가 날짜입니다: " + date);
         }
     }
 
     @Override
-    public List<UnavailableDateResponseDto> getUnavailableDates() {
-        return unavailableDateRepository.findAll().stream()
-                .map(UnavailableDateResponseDto::new)
-                .toList();
+    public List<UnavailableDate> getUnavailableDates() {
+        return unavailableDateRepository.findAll();
     }
 
     @Override
