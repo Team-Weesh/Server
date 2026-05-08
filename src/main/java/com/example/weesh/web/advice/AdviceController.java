@@ -44,7 +44,8 @@ public class AdviceController {
     @Operation(summary = "상담 예약", description = "로그인한 사용자가 상담을 예약합니다.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4xx || 5xx", description = "실패")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4XX", description = "클라이언트 오류"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "5XX", description = "서버 오류")
     })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "상담 예약 요청 DTO",
@@ -83,7 +84,8 @@ public class AdviceController {
     @Operation(summary = "내 상담 예약 시간 조회", description = "로그인한 학생이 본인의 상담 예약 시간을 조회합니다.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4xx || 5xx", description = "실패")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4XX", description = "클라이언트 오류"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "5XX", description = "서버 오류")
     })
     @GetMapping("/my-times")
     public ResponseEntity<ApiResponse<List<AdviceTimeResponseDto>>> getMyAdviceTimes(HttpServletRequest request) {
@@ -96,7 +98,8 @@ public class AdviceController {
     @Operation(summary = "상담 예약 승인", description = "관리자 권한으로 상담 예약을 승인합니다.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4xx || 5xx", description = "실패")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4XX", description = "클라이언트 오류"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "5XX", description = "서버 오류")
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/approve")
@@ -112,7 +115,8 @@ public class AdviceController {
     @Operation(summary = "상담 예약 수정", description = "관리자 권한으로 상담 예약을 수정합니다.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4xx || 5xx", description = "실패")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4XX", description = "클라이언트 오류"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "5XX", description = "서버 오류")
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/update")
@@ -130,7 +134,8 @@ public class AdviceController {
     @Operation(summary = "상담 예약 삭제", description = "관리자 권한으로 상담 예약을 삭제합니다.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4xx || 5xx", description = "실패")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4XX", description = "클라이언트 오류"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "5XX", description = "서버 오류")
     })
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}/delete")
