@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface JpaAdviceRepositoryImpl extends JpaRepository<AdviceEntity, Long> {
     boolean existsByDesiredDateAndDesiredTimeAndStatusNot(String desiredDate, String desiredTime, AdviceStatus status);
+    List<AdviceEntity> findByUser_IdAndStatusNotInOrderByDesiredDateAscDesiredTimeAsc(Long userId, List<AdviceStatus> statuses);
     List<AdviceEntity> findByDesiredDateStartingWithAndStatusNotIn(String yearMonth, List<AdviceStatus> statuses);
 }

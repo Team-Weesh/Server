@@ -42,6 +42,14 @@ public class AdviceRepositoryImpl implements AdviceRepository {
     }
 
     @Override
+    public List<Advice> findActiveByUserId(Long userId) {
+        List<AdviceStatus> excludedStatuses = List.of(AdviceStatus.DELETED, AdviceStatus.REJECTED);
+        return jpaRepository.findByUser_IdAndStatusNotInOrderByDesiredDateAscDesiredTimeAsc(userId, excludedStatuses).stream()
+                .map(adviceMapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public boolean existsByDateAndTime(String desiredDate, String desiredTime) {
         return jpaRepository.existsByDesiredDateAndDesiredTimeAndStatusNot(desiredDate, desiredTime, AdviceStatus.DELETED);
     }
