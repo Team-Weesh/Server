@@ -13,6 +13,7 @@ import com.example.weesh.core.user.application.UserRepository;
 import com.example.weesh.core.user.domain.User;
 import com.example.weesh.web.advice.dto.AdviceCreateRequestDto;
 import com.example.weesh.web.advice.dto.AdviceResponseDto;
+import com.example.weesh.web.advice.dto.AdviceTimeResponseDto;
 import com.example.weesh.web.advice.dto.AdviceUpdateRequestDro;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -62,6 +63,20 @@ public class AdviceService implements AdviceCreateUseCase, AdviceReadUseCase, Ad
         List<Advice> adviceList = adviceRepository.findAll();
         return adviceList.stream()
                 .map(AdviceResponseDto::new)
+                .toList();
+    }
+
+    @Override
+    public List<AdviceTimeResponseDto> getMyAdviceTimes(HttpServletRequest request) {
+        String token = tokenResolver.resolveToken(request);
+
+        if (token == null) {
+            throw new UnauthorizedUserException("로그인이 필요합니다.");
+        }
+
+        Long userId = getUserIdFromToken(token);
+        return adviceRepository.findActiveByUserId(userId).stream()
+                .map(AdviceTimeResponseDto::new)
                 .toList();
     }
 

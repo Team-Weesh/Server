@@ -1,13 +1,16 @@
 package com.example.weesh.web.advice;
 
-import com.example.weesh.core.advice.application.AdviceService;
-import com.example.weesh.core.advice.application.useCase.*;
+import com.example.weesh.core.advice.application.useCase.AdviceApproveUseCase;
+import com.example.weesh.core.advice.application.useCase.AdviceCreateUseCase;
+import com.example.weesh.core.advice.application.useCase.AdviceDeleteUseCase;
+import com.example.weesh.core.advice.application.useCase.AdviceReadUseCase;
+import com.example.weesh.core.advice.application.useCase.AdviceUpdateUseCase;
 import com.example.weesh.core.foundation.log.LoggingUtil;
 import com.example.weesh.core.shared.ApiResponse;
 import com.example.weesh.web.advice.dto.AdviceCreateRequestDto;
 import com.example.weesh.web.advice.dto.AdviceResponseDto;
+import com.example.weesh.web.advice.dto.AdviceTimeResponseDto;
 import com.example.weesh.web.advice.dto.AdviceUpdateRequestDro;
-import com.example.weesh.web.auth.dto.AuthRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,13 +19,20 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/advice")
-@Tag(name = "Advice API", description = "상담 관련 API")
+@Tag(name = "Advice API", description = "상담 예약 API")
 @RequiredArgsConstructor
 public class AdviceController {
     private final AdviceCreateUseCase adviceCreateUseCase;
@@ -31,16 +41,10 @@ public class AdviceController {
     private final AdviceUpdateUseCase adviceUpdateUseCase;
     private final AdviceDeleteUseCase adviceDeleteUseCase;
 
-    @Operation(summary = "상담 예약", description = "회원/비회원 상담 예약")
+    @Operation(summary = "상담 예약", description = "로그인한 사용자가 상담을 예약합니다.")
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "성공"
-            ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "4xx || 5xx",
-                    description = "실패"
-            )
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4xx || 5xx", description = "실패")
     })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "상담 예약 요청 DTO",
@@ -61,13 +65,9 @@ public class AdviceController {
                         .success("상담 예약 성공", response));
     }
 
-
     @Operation(summary = "상담 예약 전체 조회", description = "관리자 권한")
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "성공"
-            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
     })
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all")
@@ -80,16 +80,23 @@ public class AdviceController {
                 .toList();
     }
 
-    @Operation(summary = "상담 예약 승인", description = "관리자 권한으로 상담 예약 승인")
+    @Operation(summary = "내 상담 예약 시간 조회", description = "로그인한 학생이 본인의 상담 예약 시간을 조회합니다.")
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "성공"
-            ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "4xx || 5xx",
-                    description = "실패"
-            )
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4xx || 5xx", description = "실패")
+    })
+    @GetMapping("/my-times")
+    public ResponseEntity<ApiResponse<List<AdviceTimeResponseDto>>> getMyAdviceTimes(HttpServletRequest request) {
+        List<AdviceTimeResponseDto> response = adviceReadUseCase.getMyAdviceTimes(request);
+        return ResponseEntity
+                .ok(ApiResponse
+                        .success("내 상담 예약 시간 조회 성공", response));
+    }
+
+    @Operation(summary = "상담 예약 승인", description = "관리자 권한으로 상담 예약을 승인합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4xx || 5xx", description = "실패")
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/approve")
@@ -102,16 +109,10 @@ public class AdviceController {
                         .success("상담 예약 승인 성공", response));
     }
 
-    @Operation(summary = "상담 예약 수정", description = "사용자가 자신의 상담 예약 수정")
+    @Operation(summary = "상담 예약 수정", description = "관리자 권한으로 상담 예약을 수정합니다.")
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "성공"
-            ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "4xx || 5xx",
-                    description = "실패"
-            )
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4xx || 5xx", description = "실패")
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/update")
@@ -126,16 +127,10 @@ public class AdviceController {
                         .success("상담 예약 수정 성공", response));
     }
 
-    @Operation(summary = "상담 예약 삭제", description = "사용자가 자신의 상담 예약 삭제")
+    @Operation(summary = "상담 예약 삭제", description = "관리자 권한으로 상담 예약을 삭제합니다.")
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "성공"
-            ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "4xx || 5xx",
-                    description = "실패"
-            )
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "4xx || 5xx", description = "실패")
     })
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}/delete")
